@@ -27,7 +27,7 @@ public class NetworkBasedFeedDatastore implements FeedDataStore {
     public void getPostList(String topic, String before, String after,
             final OnRedditPostsRetrievedListener onRedditPostsRetrievedListener) {
 
-        final String url = "https://www.reddit.com/r/" + topic + "/hot.json?after=" + after;
+        final String url = "https://www.reddit.com/r/" + topic + "/hot.json?raw_json=1&after=" + after;
         Log.e("URL", url );
 
         final RequestQueue requestQueue = VolleySingleton.getRequestQueue();

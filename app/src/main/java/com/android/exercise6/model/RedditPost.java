@@ -18,6 +18,7 @@ public class RedditPost {
     private String domain;
     private long createdUTC;
     private String selfText;
+    private String selftext_html;
 
     private JSONObject data;
 
@@ -38,6 +39,17 @@ public class RedditPost {
         setIsStickyPost(data.getBoolean("stickied"));
         setSubreddit(data.getString("subreddit"));
         setSelfText(data.getString("selftext"));
+
+        setSelftext_html(data.getString("selftext_html"));
+
+    }
+
+    public String getSelftext_html() {
+        return selftext_html;
+    }
+
+    public void setSelftext_html(String selftext_html) {
+        this.selftext_html = selftext_html;
     }
 
     @Override

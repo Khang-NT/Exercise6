@@ -88,7 +88,10 @@ public class PostListAdapter extends RecyclerView.Adapter<ViewHolder> implements
         final RedditPost data = getItem(position);
         final String url = (data == null) ?
                 v.getContext().getString(R.string.def_url) : data.getUrl();
-        callBack.onItemClick(url, data == null ? null : data.getSelfText());
+        if (data == null)
+            callBack.onItemClick(url, "", "", "");
+        else
+            callBack.onItemClick(url, data.getSelftext_html(), data.getTitle(), data.getSubreddit());
     }
 
 

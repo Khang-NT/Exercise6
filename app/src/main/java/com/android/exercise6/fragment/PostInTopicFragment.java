@@ -1,5 +1,6 @@
 package com.android.exercise6.fragment;
 
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,9 +14,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import com.android.exercise6.R;
+import com.android.exercise6.activity.PostDetailActivity;
 import com.android.exercise6.datastore.FeedDataStore;
 import com.android.exercise6.datastore.NetworkBasedFeedDatastore;
 import com.android.exercise6.model.OnItemClick;
@@ -67,7 +68,7 @@ public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeR
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.post_list, null);
+        View view = inflater.inflate(R.layout.post_list, container, false);
         ButterKnife.bind(this, view);
         return view;
     }
@@ -224,8 +225,13 @@ public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeR
     }
 
     @Override
-    public void onItemClick(String url, String selfText) {
-        Toast.makeText(getContext(), "onItemClick", Toast.LENGTH_SHORT).show();
+    public void onItemClick(String url, String selfText_html, String title, String subReddit) {
+        Intent intent = new Intent(getContext(), PostDetailActivity.class);
+        intent.putExtra("URL", url == null ? "" : url);
+        intent.putExtra("selftext_html", selfText_html == null ? "" : selfText_html);
+        intent.putExtra("subreddit", subReddit);
+        intent.putExtra("title", title);
+        getActivity().startActivity(intent);
     }
 
     @Override
