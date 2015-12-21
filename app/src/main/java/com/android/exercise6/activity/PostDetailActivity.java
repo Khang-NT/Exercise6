@@ -43,7 +43,7 @@ public class PostDetailActivity extends AppCompatActivity {
 
         setSupportActionBar(toolbar);
 
-        dialog = ProgressDialog.show(this, "Loading", null, true, false);
+        dialog = ProgressDialog.show(this, null, "Loading...", true, false);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
