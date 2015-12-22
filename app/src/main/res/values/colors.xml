@@ -3,4 +3,9 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="itemIconTint">@color/colorPrimary</color>
+    <color name="text_view_navi_def_color">#000000</color>
+    <color name="icon_navi_def_color">?android:textColorSecondary</color>
+    <color name="card_color">#fbfbfb</color>
+    <color name="card_color_checked">#adadad</color>
 </resources>

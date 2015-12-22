@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group
+        android:id="@+id/group1"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/bookmark"
+            android:checkable="true"
+            android:checked="false"
+            android:icon="@drawable/ic_folder_special"
+            android:title="@string/bookmarks" />
+    </group>
+    <group android:id="@+id/group2">
+        <item
+            android:id="@+id/navigation_subheader"
+            android:title="@string/topics">
+            <menu>
+                <group android:checkableBehavior="single">
+                    <item
+                        android:id="@+id/androiddev"
+                        android:icon="@drawable/ic_menu_item"
+                        android:title="@string/androiddev" />
+                    <item
+                        android:id="@+id/movies"
+                        android:checked="false"
+                        android:icon="@drawable/ic_menu_item"
+                        android:title="@string/movies" />
+                    <item
+                        android:id="@+id/pics"
+                        android:checked="false"
+                        android:icon="@drawable/ic_menu_item"
+                        android:title="@string/pics" />
+                    <item
+                        android:id="@+id/foods"
+                        android:checked="false"
+                        android:icon="@drawable/ic_menu_item"
+                        android:title="@string/foods" />
+                    <item
+                        android:id="@+id/music"
+                        android:checked="false"
+                        android:icon="@drawable/ic_menu_item"
+                        android:title="@string/music" />
+                    <item
+                        android:id="@+id/comic"
+                        android:checked="false"
+                        android:icon="@drawable/ic_menu_item"
+                        android:title="@string/comic" />
+                </group>
+            </menu>
+        </item>
+
+    </group>
+</menu>

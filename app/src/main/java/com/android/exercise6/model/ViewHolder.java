@@ -1,5 +1,6 @@
 package com.android.exercise6.model;
 
+import android.support.v7.widget.AppCompatImageButton;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
@@ -29,6 +30,8 @@ public class ViewHolder extends RecyclerView.ViewHolder {
     TextView tvTitle;
     @Bind(R.id.tv_comment_domain_createdutc)
     TextView tvCommentDomainCreatedutc;
+    @Bind(R.id.ib_star)
+    AppCompatImageButton ibStar;
 
     ViewHolder(View view, boolean bindView) {
         super(view);
@@ -54,5 +57,13 @@ public class ViewHolder extends RecyclerView.ViewHolder {
                 data.getDomain(),
                 data.getCreatedUTC()
         ));
+        if (isLandscape) {
+            ibStar.setImageResource(data.isBookmark() ?
+                    R.drawable.ic_bookmark_star_selected_y : R.drawable.ic_bookmark_star_unselected_white);
+        } else {
+            ibStar.setImageResource(data.isBookmark() ?
+                    R.drawable.ic_bookmark_star_selected_r : R.drawable.ic_bookmark_star_unselected_black);
+        }
+
     }
 }

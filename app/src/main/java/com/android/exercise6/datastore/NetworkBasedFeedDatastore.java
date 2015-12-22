@@ -2,6 +2,7 @@ package com.android.exercise6.datastore;
 
 import android.util.Log;
 
+import com.android.exercise6.util.SqliteHelper;
 import com.android.exercise6.model.RedditPost;
 import com.android.exercise6.util.VolleySingleton;
 import com.android.volley.DefaultRetryPolicy;
@@ -24,9 +25,12 @@ import java.util.List;
 public class NetworkBasedFeedDatastore implements FeedDataStore {
 
     @Override
-    public void getPostList(String topic, String before, String after,
-            final OnRedditPostsRetrievedListener onRedditPostsRetrievedListener) {
-
+    public void getPostList(final String topic, String before, String after,
+                            final OnRedditPostsRetrievedListener onRedditPostsRetrievedListener) {
+        if (topic.equalsIgnoreCase("bookmarks")) {
+            getBookmarkList(onRedditPostsRetrievedListener);
+            return;
+        }
         final String url = "https://www.reddit.com/r/" + topic + "/hot.json?raw_json=1&after=" + after;
         Log.e("URL", url );
 
@@ -46,7 +50,10 @@ public class NetworkBasedFeedDatastore implements FeedDataStore {
                             JSONArray arrayPost = data.getJSONArray("children");
                             for (int i = 0; i < arrayPost.length(); i++) {
                                 JSONObject postData = arrayPost.getJSONObject(i).getJSONObject("data");
-                                list.add(new RedditPost(postData));
+                                RedditPost post = new RedditPost(postData);
+                                boolean isBookmark = SqliteHelper.isBookmark(post.getId());
+                                post.setBookmark(isBookmark);
+                                list.add(post);
                             }
 
                             onRedditPostsRetrievedListener.onRedditPostsRetrieved(list,af,null);
@@ -72,6 +79,16 @@ public class NetworkBasedFeedDatastore implements FeedDataStore {
                 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
         requestQueue.add(jsonRequest);
+    }
+
+    public void getBookmarkList(OnRedditPostsRetrievedListener onRedditPostsRetrievedListener) {
+        try {
+            List<RedditPost> posts = SqliteHelper.getAllBookmarks();
+            onRedditPostsRetrievedListener.onRedditPostsRetrieved(posts, "", null);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            onRedditPostsRetrievedListener.onRedditPostsRetrieved(null, null, e);
+        }
     }
 
 }

@@ -1,11 +1,15 @@
 package com.android.exercise6.activity;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.WebChromeClient;
@@ -27,6 +31,7 @@ public class PostDetailActivity extends AppCompatActivity {
     @Bind(R.id.webview)
     WebView wv;
 
+
     ProgressDialog dialog = null;
     private String url;
 
@@ -36,6 +41,7 @@ public class PostDetailActivity extends AppCompatActivity {
         setContentView(R.layout.post_detail_activity);
         ButterKnife.bind(this);
 
+
         url = getIntent().getStringExtra("URL");
         String selftext_html = getIntent().getStringExtra("selftext_html");
         String subReddit = getIntent().getStringExtra("subreddit");
@@ -43,7 +49,7 @@ public class PostDetailActivity extends AppCompatActivity {
 
         setSupportActionBar(toolbar);
 
-        dialog = ProgressDialog.show(this, null, "Loading...", true, false);
+        showDialog();
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
@@ -51,21 +57,25 @@ public class PostDetailActivity extends AppCompatActivity {
         toolbar.setSubtitle(subReddit);
         setTitle(title);
 
+        wv.getSettings().setJavaScriptEnabled(true);
+        wv.getSettings().setAppCacheEnabled(true);
+        wv.getSettings().setBuiltInZoomControls(true);
+        wv.getSettings().setSupportZoom(true);
+
         wv.setWebChromeClient(new WebChromeClient());
         wv.setWebViewClient(new WebViewClient() {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 view.loadUrl(url);
-                dialog = ProgressDialog.show(view.getContext(), null, "Loading...", true, false);
+                showDialog();
                 return false;
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 setTitle(view.getTitle());
-                if (dialog != null)
-                    dialog.dismiss();
+                dismissDialog();
             }
 
 
@@ -85,11 +95,52 @@ public class PostDetailActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        wv.saveState(outState);
+    }
+
+    @Override
     public void onBackPressed() {
         if (wv != null && wv.canGoBack())
             wv.goBack();
         else
             super.onBackPressed();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        dismissDialog();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        dismissDialog();
+    }
+
+    private void showDialog() {
+        if (dialog != null && dialog.isShowing())
+            return;
+        dialog = ProgressDialog.show(this, null, "Loading...", true, false);
+        dialog.setOnKeyListener(new DialogInterface.OnKeyListener() {
+            @Override
+            public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    Log.e(TAG, "onKey: back press in dialog");
+                    dismissDialog();
+                }
+                return true;
+            }
+        });
+    }
+
+    private void dismissDialog() {
+        if (dialog != null && dialog.isShowing()) {
+            dialog.dismiss();
+            dialog = null;
+        }
     }
 
     @Override

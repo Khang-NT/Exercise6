@@ -2,5 +2,5 @@
 <resources>
     <dimen name="textsize1">20sp</dimen>
     <dimen name="textsize2">12sp</dimen>
-
+    <dimen name="header_height">170dp</dimen>
 </resources>

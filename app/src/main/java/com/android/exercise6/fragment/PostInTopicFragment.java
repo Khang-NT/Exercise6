@@ -6,21 +6,28 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import com.android.exercise6.R;
+import com.android.exercise6.activity.NavigationDrawerPostActivity;
 import com.android.exercise6.activity.PostDetailActivity;
 import com.android.exercise6.datastore.FeedDataStore;
 import com.android.exercise6.datastore.NetworkBasedFeedDatastore;
 import com.android.exercise6.model.OnItemClick;
 import com.android.exercise6.model.OnRequestLoadMore;
+import com.android.exercise6.model.OnSelectStateChange;
 import com.android.exercise6.model.PostListAdapter;
 import com.android.exercise6.model.RedditPost;
 import com.android.exercise6.util.VolleySingleton;
@@ -40,14 +47,18 @@ import butterknife.OnClick;
 /**
  * Created by Khang on 07/12/2015.
  */
-public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeRefreshLayout.OnRefreshListener, OnRequestLoadMore {
+public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeRefreshLayout.OnRefreshListener, OnRequestLoadMore, OnSelectStateChange {
     private static final String POST_LIST = "POST_LIST";
     private static final String SCROLL_POSITION = "SCROLL_POSITION";
-    private static final String TOPIC = "TOPIC", AFTER = "AFTER";
+    private static final String AFTER = "AFTER";
+    private static final String BOOKMARKS = "BOOKMARKS";
+    private static final String SELECTED_COUNT = "SELECTED_COUNT", SELECTING = "SELECTING";
 
     private String topic, after;
     private PostListAdapter adapter;
     private boolean isLoading;
+
+    private ActionModeCallback actionModeCallback = new ActionModeCallback();
 
     @Bind(R.id.recyclerview)
     RecyclerView mRecyclerView;
@@ -61,8 +72,18 @@ public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeR
 
     public static PostInTopicFragment newInstance(String topic) {
         PostInTopicFragment instance = new PostInTopicFragment();
-        instance.topic = topic;
+
+        Bundle argument = new Bundle();
+        argument.putString("topic", topic);
+        instance.setArguments(argument);
+
         return instance;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        topic = getArguments().getString("topic");
     }
 
     @Nullable
@@ -77,7 +98,7 @@ public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeR
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
-        adapter = new PostListAdapter(this, this, isLandscape);
+        adapter = new PostListAdapter(this, this, this, isLandscape, topic);
 
         mRecyclerView.setHasFixedSize(true);
         if (isLandscape) {
@@ -99,6 +120,8 @@ public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeR
         mRecyclerView.setAdapter(adapter);
 
         refreshLayout.setOnRefreshListener(this);
+
+
     }
 
     @Override
@@ -107,24 +130,39 @@ public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeR
         super.onActivityCreated(savedInstanceState);
         if (savedInstanceState != null) {
             String[] arr = savedInstanceState.getStringArray(POST_LIST);
+            boolean[] bookmarks = savedInstanceState.getBooleanArray(BOOKMARKS);
             List<RedditPost> list = new ArrayList<>();
-            try {
-                for (String json : arr) {
-                    list.add(new RedditPost(new JSONObject(json)));
+            if (bookmarks != null)
+                try {
+                    int i = 0;
+                    for (String json : arr) {
+
+                        list.add(new RedditPost(new JSONObject(json), bookmarks[i]));
+                        i++;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             int scroll_position = savedInstanceState.getInt(SCROLL_POSITION);
-            topic = savedInstanceState.getString(TOPIC);
+
             after = savedInstanceState.getString(AFTER);
 
             adapter.addPost(list);
 
             mRecyclerView.scrollTo(0, scroll_position);
+
+            int selectedCount = savedInstanceState.getInt(SELECTED_COUNT, 0);
+            if (selectedCount > 0) {
+                adapter.selecting = savedInstanceState.getBooleanArray(SELECTING);
+                adapter.selectedCount = selectedCount;
+
+                adapter.notifyDataSetChanged();
+                ((AppCompatActivity) getActivity()).startSupportActionMode(actionModeCallback);
+                actionModeCallback.setTitle(selectedCount + " selected");
+            }
         }
 
-        if (adapter.getItemCount() == 0){
+        if (adapter.getItemCount() == 0) {
             refreshLayout.post(new Runnable() {
                 @Override
                 public void run() {
@@ -140,18 +178,22 @@ public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeR
         super.onSaveInstanceState(outState);
         List<RedditPost> list = adapter.getPostList();
         String[] arrayPost = new String[list.size()];
+        boolean[] bookmarks = new boolean[list.size()];
         int i = 0;
         for (RedditPost post : list) {
             arrayPost[i] = post.toString();
+            bookmarks[i] = post.isBookmark();
             i++;
         }
         outState.putStringArray(POST_LIST, arrayPost);
+        outState.putBooleanArray(BOOKMARKS, bookmarks);
         outState.putInt(SCROLL_POSITION, mRecyclerView.getScrollY());
         outState.putString(AFTER, after);
-        outState.putString(TOPIC, topic);
+        outState.putInt(SELECTED_COUNT, adapter.selectedCount);
+        outState.putBooleanArray(SELECTING, adapter.selecting);
     }
 
-    @OnClick (R.id.b_retry)
+    @OnClick(R.id.b_retry)
     public void onRetry() {
         refreshLayout.setVisibility(View.VISIBLE);
         no_post_layout.setVisibility(View.GONE);
@@ -173,7 +215,7 @@ public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeR
         e.printStackTrace();
     }
 
-    private void loadMorePost(final boolean clearOld){
+    private void loadMorePost(final boolean clearOld) {
         isLoading = true;
         NetworkBasedFeedDatastore networkBasedFeedDatastore = new NetworkBasedFeedDatastore();
         networkBasedFeedDatastore.getPostList(topic, null, after,
@@ -198,7 +240,7 @@ public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeR
                                     public void run() {
                                         try {
                                             refreshLayout.setRefreshing(false);
-                                        } catch (Exception e){
+                                        } catch (Exception e) {
                                             e.printStackTrace();
                                         }
                                     }
@@ -214,7 +256,7 @@ public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeR
     }
 
     // Cancel all background network thread
-    private void cancelAll(){
+    private void cancelAll() {
         VolleySingleton.getRequestQueue().cancelAll(new RequestQueue.RequestFilter() {
             @Override
             public boolean apply(Request<?> request) {
@@ -243,7 +285,7 @@ public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeR
                 if (!isLoading)
                     loadMorePost(false);
             }
-        },1000);
+        }, 1000);
 
     }
 
@@ -255,17 +297,81 @@ public class PostInTopicFragment extends Fragment implements OnItemClick, SwipeR
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-    }
-
-    @Override
     public void onRefresh() {
         cancelAll();
         after = null; // Clear all, load 1st page
         loadMorePost(true);
     }
 
+    public String getTopic() {
+        return topic;
+    }
+
+    @Override
+    public void onChanged(int selectedCount) {
+        if (selectedCount == 0 && !actionModeCallback.isFinised())
+            actionModeCallback.finish();
+        else {
+            if (actionModeCallback.isFinised())
+                ((AppCompatActivity) getActivity()).startSupportActionMode(actionModeCallback);
+            actionModeCallback.setTitle(selectedCount + " selected");
+        }
+    }
+
+    private class ActionModeCallback implements ActionMode.Callback {
+        ActionMode mode;
+
+        public void setTitle(String title) {
+            mode.setTitle(title);
+        }
+
+        public void finish() {
+            this.mode.finish();
+            this.mode = null;
+        }
+
+        public boolean isFinised() {
+            return mode == null;
+        }
+
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            this.mode = mode;
+            mode.getMenuInflater().inflate(R.menu.action_mode, menu);
+            ((NavigationDrawerPostActivity) getActivity()).drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.ac_remove:
+                    adapter.removeAllSelecting();
+                    finish();
+                    break;
+
+                case R.id.ac_selectALl:
+                    adapter.selectAll();
+                    break;
+                default:
+
+            }
+            return true;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            adapter.cancelSelect();
+            if (getActivity() != null)
+                ((NavigationDrawerPostActivity) getActivity()).
+                        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            this.mode = null;
+        }
+    }
 
 }

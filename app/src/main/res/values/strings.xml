@@ -1,6 +1,14 @@
 <resources>
-    <string name="app_name">Exercise 6</string>
+    <string name="app_name">Exercise 7</string>
     <string name="def_url">https://www.reddit.com</string>
     <string name="no_posts">There are no posts at the moment</string>
     <string name="share">Share</string>
+    <string name="topics">TOPICS</string>
+    <string name="androiddev">ANDROIDDEV</string>
+    <string name="movies">MOVIES</string>
+    <string name="pics">PICS</string>
+    <string name="foods">FOODS</string>
+    <string name="music">MUSIC</string>
+    <string name="bookmarks">BOOKMARKS</string>
+    <string name="comic">COMIC</string>
 </resources>

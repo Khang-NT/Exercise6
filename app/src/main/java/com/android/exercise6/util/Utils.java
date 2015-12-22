@@ -1,12 +1,7 @@
 package com.android.exercise6.util;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.text.Html;
 import android.text.Spanned;
-
-import com.android.exercise6.MainApplication;
 
 import java.util.Date;
 
@@ -51,13 +46,4 @@ public class Utils {
         return offset + " days";
     }
 
-    public static boolean checkNetworkConnection(){
-        ConnectivityManager cm =
-                (ConnectivityManager) MainApplication.sharedContext
-                        .getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null &&
-                activeNetwork.isConnectedOrConnecting();
-    }
 }

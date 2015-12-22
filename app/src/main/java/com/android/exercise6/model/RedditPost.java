@@ -19,14 +19,15 @@ public class RedditPost {
     private long createdUTC;
     private String selfText;
     private String selftext_html;
+    private boolean bookmark;
 
     private JSONObject data;
 
-    public RedditPost() {
-
+    public RedditPost(JSONObject data) throws JSONException {
+        this(data, false);
     }
 
-    public RedditPost(JSONObject data) throws JSONException {
+    public RedditPost(JSONObject data, boolean bookmark) throws JSONException {
         this.data = data;
         setAuthor(data.getString("author"));
         setCommentCount(data.getInt("num_comments"));
@@ -42,6 +43,16 @@ public class RedditPost {
 
         setSelftext_html(data.getString("selftext_html"));
 
+        setBookmark(bookmark);
+
+    }
+
+    public boolean isBookmark() {
+        return bookmark;
+    }
+
+    public void setBookmark(boolean bookmark) {
+        this.bookmark = bookmark;
     }
 
     public String getSelftext_html() {

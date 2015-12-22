@@ -1,6 +1,7 @@
 package com.android.exercise6.util;
 
-import com.android.exercise6.MainApplication;
+import android.content.Context;
+
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 
@@ -9,9 +10,13 @@ import com.android.volley.toolbox.Volley;
  */
 public class VolleySingleton {
     private static RequestQueue mRequestQueue;
+
+    public static void initialize(Context context) {
+        mRequestQueue = Volley.newRequestQueue(context);
+    }
+
     public synchronized static RequestQueue getRequestQueue(){
-        if (mRequestQueue == null)
-            mRequestQueue = Volley.newRequestQueue(MainApplication.sharedContext);
+        assert mRequestQueue != null : "Initialize First";
         return mRequestQueue;
     }
 }
